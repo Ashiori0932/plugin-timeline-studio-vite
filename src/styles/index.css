@@ -70,9 +70,26 @@ button { color:inherit; }
 .plugin-image img { width:100%; height:100%; display:block; pointer-events:none; }
 .plugin-image>span { width:100%; height:100%; display:grid; place-items:center; color:#6f7972; font-size:18px; }
 .plugin-image i { position:absolute; inset:0; pointer-events:none; } .plugin-image b { position:absolute; right:22px; bottom:20px; padding:7px 10px; border:1px solid rgba(255,255,255,.35); color:#fff; font:600 12px var(--font-geist-mono); letter-spacing:.1em; backdrop-filter:blur(5px); }
+.presentation-shell .plugin-transition-stack { position:relative; width:100%; height:100%; overflow:hidden; }
+.presentation-shell .plugin-transition-layer { position:absolute; inset:0; width:100%; height:100%; will-change:opacity,transform; animation-fill-mode:both; animation-timing-function:cubic-bezier(.22,1,.36,1); }
+.presentation-shell .plugin-transition-out { pointer-events:none; }
+.presentation-shell .plugin-transition-in.plugin-transition-fade { animation-name:plugin-fade-in; }
+.presentation-shell .plugin-transition-out.plugin-transition-fade { animation-name:plugin-fade-out; }
+.presentation-shell .plugin-transition-in.plugin-transition-slide-left { animation-name:plugin-slide-left-in; }
+.presentation-shell .plugin-transition-out.plugin-transition-slide-left { animation-name:plugin-slide-left-out; }
+.presentation-shell .plugin-transition-in.plugin-transition-slide-right { animation-name:plugin-slide-right-in; }
+.presentation-shell .plugin-transition-out.plugin-transition-slide-right { animation-name:plugin-slide-right-out; }
+@keyframes plugin-fade-in { from { opacity:0; } to { opacity:1; } }
+@keyframes plugin-fade-out { from { opacity:1; } to { opacity:0; } }
+@keyframes plugin-slide-left-in { from { opacity:0; transform:translateX(-9%); } to { opacity:1; transform:translateX(0); } }
+@keyframes plugin-slide-left-out { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(9%); } }
+@keyframes plugin-slide-right-in { from { opacity:0; transform:translateX(9%); } to { opacity:1; transform:translateX(0); } }
+@keyframes plugin-slide-right-out { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(-9%); } }
 .plugin-chart { width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between; gap:11px; overflow:hidden; }
 .chart-row { min-height:28px; display:grid; grid-template-columns:112px 1fr 34px; gap:12px; align-items:center; font-size:16px; }
 .chart-row>span { font-size:15px; font-weight:550; } .chart-row>div { height:7px; border-radius:5px; overflow:hidden; } .chart-row i { display:block; height:100%; border-radius:5px; }
+.presentation-shell .chart-row i.is-value-animating { animation-name:chart-value-change; animation-fill-mode:both; animation-timing-function:cubic-bezier(.22,1,.36,1); will-change:width; }
+@keyframes chart-value-change { from { width:var(--chart-from-width); } to { width:var(--chart-to-width); } }
 .chart-row strong { font:650 15px var(--font-geist-mono); text-align:right; }
 .chart-empty,.plugin-missing { width:100%; height:100%; display:grid; place-items:center; border:1px dashed #a8b0aa; color:#7f8983; }
 
@@ -116,6 +133,10 @@ select:focus,input:focus { border-color:#9eaaa1; box-shadow:0 0 0 2px rgba(90,10
 .presentation-controls .primary-control { background:var(--lime); color:var(--ink); font-size:13px; }
 .presentation-counter { min-width:76px; padding:0 10px 0 7px; text-align:center; } .presentation-counter strong { font:600 13px var(--font-geist-mono); } .presentation-counter span { color:#8e9b93; font:10px var(--font-geist-mono); }
 .global-progress { position:fixed; left:0; right:0; bottom:0; height:3px; background:rgba(255,255,255,.12); z-index:101; } .global-progress span { display:block; height:100%; background:var(--lime); transition:width .08s linear; }
+
+@media (prefers-reduced-motion:reduce) {
+  .presentation-shell .plugin-transition-layer,.presentation-shell .chart-row i.is-value-animating { animation-duration:1ms!important; }
+}
 
 @media (max-width:1100px) {
   .studio-shell { grid-template-columns:224px minmax(420px,1fr) 260px; }
