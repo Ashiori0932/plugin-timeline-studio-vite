@@ -57,7 +57,7 @@ export function PropertyInspector({ project, activeItem, selected, onUpdateProje
               <PropertyEditor
                 key={property.key}
                 property={property}
-                value={selected.properties[property.key]}
+                value={selected.properties[property.key] ?? plugin.defaultProperties[property.key]}
                 onChange={(value) => onUpdateComponent(selected.id, (component) => ({ ...component, properties: { ...component.properties, [property.key]: value } }))}
               />
             ))}

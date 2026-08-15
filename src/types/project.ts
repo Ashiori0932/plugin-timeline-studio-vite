@@ -47,10 +47,21 @@ export type PluginProperty = {
   options?: Array<{ label: string; value: string }>;
 };
 
+export type PluginRenderMode = "editor" | "presentation";
+
+export type PluginTransitionContext = {
+  key: number;
+  previousValue: unknown;
+  previousItem: DataItem;
+  defaultDuration: number;
+};
+
 export type PluginRenderContext = {
   value: unknown;
   item: DataItem;
   properties: Record<string, unknown>;
+  mode: PluginRenderMode;
+  transition?: PluginTransitionContext;
 };
 
 export type PluginDefinition = {
