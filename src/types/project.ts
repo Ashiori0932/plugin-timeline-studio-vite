@@ -56,11 +56,17 @@ export type PluginTransitionContext = {
   defaultDuration: number;
 };
 
+export type PluginPlaybackContext = {
+  itemProgress: number;
+  timelineProgress: number;
+};
+
 export type PluginRenderContext = {
   value: unknown;
   item: DataItem;
   properties: Record<string, unknown>;
   mode: PluginRenderMode;
+  playback?: PluginPlaybackContext;
   transition?: PluginTransitionContext;
 };
 
@@ -71,6 +77,7 @@ export type PluginDefinition = {
   description: string;
   acceptedTypes: ValueType[];
   defaultSize: { width: number; height: number };
+  minimumSize?: { width: number; height: number };
   defaultProperties: Record<string, unknown>;
   propertySchema: PluginProperty[];
   render: (context: PluginRenderContext) => ReactNode;

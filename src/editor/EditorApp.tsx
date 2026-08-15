@@ -68,7 +68,9 @@ export function EditorApp({ project, setProject, onPresent }: Props) {
 
   function addComponent(pluginType: string) {
     const plugin = PLUGIN_REGISTRY[pluginType];
-    const binding = getCompatibleBindings(activeItem, plugin.acceptedTypes)[0]?.path ?? "title";
+    const binding = plugin.acceptedTypes.length
+      ? getCompatibleBindings(activeItem, plugin.acceptedTypes)[0]?.path ?? "title"
+      : "";
     const offset = (project.components.length % 7) * project.canvas.gridSize * 2;
     const component: ComponentInstance = {
       id: `${pluginType}-${Date.now()}`,

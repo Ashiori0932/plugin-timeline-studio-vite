@@ -30,18 +30,20 @@ export function PropertyInspector({ project, activeItem, selected, onUpdateProje
             <button onClick={onDuplicate} aria-label="复制组件"><Icon name="copy" /></button>
             <button onClick={onDelete} aria-label="删除组件"><Icon name="trash" /></button>
           </div>
-          <InspectorGroup title="数据绑定">
-            <label className="field-label">内容字段</label>
-            <div className="select-wrap">
-              <select value={selected.binding} onChange={(event) => onUpdateComponent(selected.id, (component) => ({ ...component, binding: event.target.value }))}>
-                {getCompatibleBindings(activeItem, plugin.acceptedTypes).map((binding) => (
-                  <option key={binding.path} value={binding.path}>{binding.path} · {binding.type}</option>
-                ))}
-              </select>
-              <Icon name="chevron" />
-            </div>
-            <div className="binding-preview"><span>当前值</span><strong>{String(getValueByPath(activeItem, selected.binding) ?? "未定义").slice(0, 42)}</strong></div>
-          </InspectorGroup>
+          {plugin.acceptedTypes.length > 0 && (
+            <InspectorGroup title="数据绑定">
+              <label className="field-label">内容字段</label>
+              <div className="select-wrap">
+                <select value={selected.binding} onChange={(event) => onUpdateComponent(selected.id, (component) => ({ ...component, binding: event.target.value }))}>
+                  {getCompatibleBindings(activeItem, plugin.acceptedTypes).map((binding) => (
+                    <option key={binding.path} value={binding.path}>{binding.path} · {binding.type}</option>
+                  ))}
+                </select>
+                <Icon name="chevron" />
+              </div>
+              <div className="binding-preview"><span>当前值</span><strong>{String(getValueByPath(activeItem, selected.binding) ?? "未定义").slice(0, 42)}</strong></div>
+            </InspectorGroup>
+          )}
           <InspectorGroup title="位置与尺寸">
             <div className="property-grid">
               {(["x", "y", "width", "height"] as const).map((key) => (

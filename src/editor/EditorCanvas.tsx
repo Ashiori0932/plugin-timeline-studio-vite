@@ -64,17 +64,18 @@ export function EditorCanvas({ project, activeItem, selectedId, toast, onSelect,
           };
         }
 
+        const minimumSize = PLUGIN_REGISTRY[component.pluginType]?.minimumSize ?? { width: 80, height: 56 };
         let { x, y, width, height } = drag.origin;
-        if (drag.handle?.includes("e")) width = Math.max(80, snap(drag.origin.width + dx, grid, event.altKey));
-        if (drag.handle?.includes("s")) height = Math.max(56, snap(drag.origin.height + dy, grid, event.altKey));
+        if (drag.handle?.includes("e")) width = Math.max(minimumSize.width, snap(drag.origin.width + dx, grid, event.altKey));
+        if (drag.handle?.includes("s")) height = Math.max(minimumSize.height, snap(drag.origin.height + dy, grid, event.altKey));
         if (drag.handle?.includes("w")) {
           const nextX = snap(drag.origin.x + dx, grid, event.altKey);
-          width = Math.max(80, drag.origin.width + drag.origin.x - nextX);
+          width = Math.max(minimumSize.width, drag.origin.width + drag.origin.x - nextX);
           x = drag.origin.x + drag.origin.width - width;
         }
         if (drag.handle?.includes("n")) {
           const nextY = snap(drag.origin.y + dy, grid, event.altKey);
-          height = Math.max(56, drag.origin.height + drag.origin.y - nextY);
+          height = Math.max(minimumSize.height, drag.origin.height + drag.origin.y - nextY);
           y = drag.origin.y + drag.origin.height - height;
         }
         width = Math.min(width, project.canvas.width - x);

@@ -21,6 +21,29 @@ export function PresentationRuntime({ project, onExit }: { project: ProjectDocum
   const transitionTimerRef = useRef<number | null>(null);
   const activeItem = project.items[activeIndex] ?? {};
 
+  const timelineTiming = useMemo(() => {
+    let totalDuration = 0;
+    const entries = project.items.map((item) => {
+      const start = totalDuration;
+      const duration = item.duration ?? project.timeline.defaultDuration;
+      totalDuration += duration;
+      return { start, duration };
+    });
+    return { entries, totalDuration };
+  }, [project.items, project.timeline.defaultDuration]);
+
+  const playback = useMemo(() => {
+    const currentTiming = timelineTiming.entries[activeIndex];
+    const timelineProgress = currentTiming && timelineTiming.totalDuration > 0
+      ? (currentTiming.start + progress * currentTiming.duration) / timelineTiming.totalDuration
+      : 0;
+
+    return {
+      itemProgress: progress,
+      timelineProgress: Math.max(0, Math.min(1, timelineProgress)),
+    };
+  }, [activeIndex, progress, timelineTiming]);
+
   const transitionWindow = useMemo(() => {
     const durations = project.components.map((component) => {
       const plugin = PLUGIN_REGISTRY[component.pluginType];
@@ -144,6 +167,7 @@ export function PresentationRuntime({ project, onExit }: { project: ProjectDocum
               pluginType={component.pluginType}
               value={getValueByPath(activeItem, component.binding)}
               item={activeItem}
+              playback={playback}
               properties={component.properties}
               mode="presentation"
               transition={transition ? {
@@ -163,7 +187,6 @@ export function PresentationRuntime({ project, onExit }: { project: ProjectDocum
         <button onClick={() => showAdjacent(1)} aria-label="下一项">›</button>
         <div className="presentation-counter"><strong>{String(project.items.length ? activeIndex + 1 : 0).padStart(2, "0")}</strong><span>/ {String(project.items.length).padStart(2, "0")}</span></div>
       </div>
-      <div className="global-progress"><span style={{ width: `${progress * 100}%` }} /></div>
     </main>
   );
 }
