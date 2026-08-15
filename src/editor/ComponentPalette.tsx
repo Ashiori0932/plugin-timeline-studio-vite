@@ -30,7 +30,7 @@ export function ComponentPalette({ project, selectedId, onSelect, onAdd }: Props
               <span className="layer-grip">⠿</span>
               <span className="layer-type">{PLUGIN_REGISTRY[component.pluginType]?.glyph}</span>
               <span>{PLUGIN_REGISTRY[component.pluginType]?.name}</span>
-              <small>{component.binding}</small>
+              <small>{component.binding || "运行时"}</small>
             </button>
           ))}
         </div>

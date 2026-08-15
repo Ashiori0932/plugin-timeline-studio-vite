@@ -141,13 +141,13 @@ type DataItem = Record<string, unknown> & {
 | --- | --- |
 | `id` | 实例唯一标识，用于选择、更新、删除和 React key |
 | `pluginType` | 插件注册表中的键，例如 `builtin.text` |
-| `binding` | 数据字段路径，例如 `metrics.完成度` |
+| `binding` | 数据字段路径，例如 `metrics.完成度`；运行时插件使用空字符串 |
 | `x` / `y` | 组件左上角在逻辑画布中的坐标 |
 | `width` / `height` | 组件逻辑尺寸 |
 | `zIndex` | 图层顺序；渲染前按升序排列 |
 | `properties` | 插件私有配置，由插件定义解释 |
 
-组件实例不保存某个时间点的具体内容。内容始终通过 `binding` 从当前 `DataItem` 动态读取，因此同一布局可以复用于全部时间轴对象。
+数据绑定插件的实例不保存某个时间点的具体内容。内容始终通过 `binding` 从当前 `DataItem` 动态读取，因此同一布局可以复用于全部时间轴对象。运行时插件将 `acceptedTypes` 声明为空数组，不显示数据绑定面板，并从 `PluginRenderContext` 获取播放状态等运行时数据。
 
 ### 5.4 `PluginDefinition`
 
@@ -161,13 +161,16 @@ type PluginDefinition = {
   description: string;
   acceptedTypes: ValueType[];
   defaultSize: { width: number; height: number };
+  minimumSize?: { width: number; height: number };
   defaultProperties: Record<string, unknown>;
   propertySchema: PluginProperty[];
   render: (context: PluginRenderContext) => ReactNode;
 };
 ```
 
-展示运行时会通过 `PluginRenderContext` 额外传入 `mode` 和可选的 `transition`。`transition` 包含上一数据项、上一绑定值、切换序号和项目默认过渡时长。插件由此可以只在展示模式处理新旧内容，编辑模式仍直接渲染当前值。
+展示运行时会通过 `PluginRenderContext` 额外传入 `mode`、可选的 `transition` 和可选的 `playback`。`transition` 包含上一数据项、上一绑定值、切换序号和项目默认过渡时长；`playback` 包含当前对象进度与整个时间轴进度。插件由此可以处理展示动画或读取播放状态，编辑模式仍通过同一个渲染入口预览。
+
+`minimumSize` 未提供时使用编辑器默认值 `80 × 56`；细长组件可声明更小的尺寸限制。
 
 `propertySchema` 目前支持 `text`、`number`、`color` 和 `select`。如果插件需要布尔值、多行文本、文件选择等新控件，需要先扩展 `PluginProperty` 与 `PropertyEditor`。
 
@@ -367,6 +370,7 @@ Record<string, PluginDefinition>
 | `builtin.text` | `string`、`number` | 标题、正文和数值文本 |
 | `builtin.image` | `string` | 图片 URL 或相对路径 |
 | `builtin.chart` | `object`、`array`、`number` | 将数值转换为横向条形图 |
+| `builtin.progress` | 运行时播放状态 | 显示当前对象或整个时间轴的播放进度 |
 
 `PluginRenderer` 是统一入口。若 `pluginType` 不存在，会渲染“未知插件”占位内容，而不是让整个页面崩溃。
 
@@ -381,7 +385,18 @@ Record<string, PluginDefinition>
 
 条形长度相对于当前可见条目中的最大值计算，不使用固定业务量程。
 
-### 9.3 新增插件的标准步骤
+### 9.3 进度条插件
+
+`builtin.progress` 不绑定 JSON 字段，其 `acceptedTypes` 为空数组。编辑模式固定显示 50%，便于调整位置、尺寸与颜色；展示模式从 `PluginRenderContext.playback` 读取真实进度。
+
+进度模式包括：
+
+- `item`：当前数据对象从 0 到 100% 的播放进度，切换对象时归零。
+- `timeline`：已完成对象时长与当前对象已播放时长之和，占整个时间轴总时长的比例。
+
+横向进度从左向右填充，纵向进度从下向上填充。插件还支持前景色、轨道色和圆角属性。原先固定在展示页面底部的全局进度条已经移除，进度条的位置和实例数量完全由项目组件决定。
+
+### 9.4 新增插件的标准步骤
 
 以新增徽章插件为例：
 
@@ -422,7 +437,9 @@ Record<string, PluginDefinition>
 
 如果只使用现有属性类型，新增插件通常不需要修改 `EditorApp`、`EditorCanvas`、`PropertyInspector` 或 `PresentationRuntime`。
 
-### 9.4 插件开发约束
+运行时插件应把 `acceptedTypes` 设置为空数组，并从渲染上下文读取运行时数据；此类插件不会显示数据绑定面板。
+
+### 9.5 插件开发约束
 
 - `render` 应尽量是纯函数，不自行修改项目状态。
 - 插件根节点应占满组件实例尺寸，通常设置 `width: 100%` 和 `height: 100%`。
@@ -509,7 +526,7 @@ scale = min(windowWidth / canvasWidth, windowHeight / canvasHeight)
 | 状态 | 作用 |
 | --- | --- |
 | `activeIndex` | 当前数据项索引 |
-| `progress` | 当前项的 0～1 展示进度，用于底部进度条 |
+| `progress` | 当前项的 0～1 展示进度，传递给运行时插件 |
 | `isPlaying` | 播放或暂停 |
 | `scale` | 当前窗口缩放比例 |
 | `transition` | 当前交叉过渡的上一数据项和切换序号 |
@@ -541,6 +558,8 @@ stateDiagram-v2
 用户可以手动切换上一项或下一项。手动切换会重置进度，并通过取模方式首尾循环；该手动行为不受自动播放的 `loop` 设置限制。
 
 按 `Esc` 或点击“退出展示”会回到编辑模式。
+
+`PresentationRuntime` 会预先计算每项起始时间和总时长，再根据 `activeIndex` 与 `progress` 生成 `playback`。该计算结果传给所有插件，页面本身不再渲染固定进度条。
 
 ### 11.3 组件级展示动画
 
@@ -675,6 +694,8 @@ npm run preview
 - 不同画布缩放比例下移动距离一致。
 - 时间轴切换后所有组件更新为对应项数据。
 - 属性面板只显示与插件类型兼容的字段。
+- 运行时插件不显示数据绑定面板，图层列表显示“运行时”。
+- 细长进度条缩放时不会被强制恢复为普通组件的最小高度。
 
 展示模式检查：
 
@@ -684,6 +705,8 @@ npm run preview
 - 文字和图片的无动画、淡入淡出、左右滑入及组件级时长设置生效。
 - 交叉过渡结束后旧内容节点被清理，快速连续切换不会残留更早的数据项。
 - 条形图相同标签平滑改变宽度，新增标签从 0 开始，关闭动画后立即更新。
+- 进度条的当前对象/整个时间轴模式、横向/纵向方向、颜色和圆角正确生效。
+- 展示页面底部不再存在固定的全局进度条。
 - 编辑模式切换时间轴对象时不出现展示动画。
 - 窗口缩放后画布保持比例并居中。
 - `Esc` 可以安全退出。
