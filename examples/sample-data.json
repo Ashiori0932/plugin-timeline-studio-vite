@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "timeline": {
+    "defaultDuration": 5000,
+    "loop": true,
+    "transitionDuration": 400
+  },
+  "items": [
+    {
+      "id": "sample-01",
+      "duration": 6000,
+      "title": "第一组数据",
+      "description": "这是第一组展示文本。",
+      "image": "https://example.com/image-01.jpg",
+      "statistics": {
+        "销售额": 82,
+        "增长率": 64,
+        "完成度": 91
+      }
+    },
+    {
+      "id": "sample-02",
+      "title": "第二组数据",
+      "description": "未设置 duration 时使用默认展示时长。",
+      "image": "https://example.com/image-02.jpg",
+      "statistics": {
+        "销售额": 76,
+        "增长率": 71,
+        "完成度": 85
+      }
+    }
+  ]
+}
