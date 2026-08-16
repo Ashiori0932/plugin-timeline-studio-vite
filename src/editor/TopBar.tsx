@@ -11,7 +11,9 @@ type Props = {
   onPresent: () => void;
 };
 
+/** 编辑器顶部工具栏：项目命名、JSON 导入导出以及进入展示模式。 */
 export function TopBar({ project, onRename, onImportData, onImportProject, onExport, onPresent }: Props) {
+  // 原生文件输入保持隐藏，由样式统一的按钮通过 ref 主动触发。
   const dataInputRef = useRef<HTMLInputElement>(null);
   const projectInputRef = useRef<HTMLInputElement>(null);
 
@@ -31,6 +33,7 @@ export function TopBar({ project, onRename, onImportData, onImportProject, onExp
         <button className="button subtle" onClick={() => projectInputRef.current?.click()}>打开项目</button>
         <button className="button subtle" onClick={onExport}><Icon name="download" /> 导出</button>
         <button className="button present-button" onClick={onPresent}><Icon name="play" /> 开始展示</button>
+        {/* 两个输入分别对应“只替换数据”和“替换整个项目”，防止导入语义混淆。 */}
         <input ref={dataInputRef} hidden type="file" accept="application/json,.json" onChange={onImportData} />
         <input ref={projectInputRef} hidden type="file" accept="application/json,.json" onChange={onImportProject} />
       </div>

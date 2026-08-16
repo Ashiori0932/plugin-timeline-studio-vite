@@ -8,6 +8,8 @@ import type {
 } from "../types/project";
 
 type PresentationAnimation = "none" | "fade" | "slide-left" | "slide-right";
+
+/** 条形图通过 CSS 自定义属性把起止宽度传给关键帧动画。 */
 type ChartBarStyle = CSSProperties & {
   "--chart-from-width"?: string;
   "--chart-to-width"?: string;
@@ -20,21 +22,32 @@ const PRESENTATION_ANIMATION_OPTIONS = [
   { label: "从右侧滑入", value: "slide-right" },
 ];
 
+/** 读取组件级动画时长；无效值回退到项目级默认值，并禁止出现负时长。 */
 function resolveAnimationDuration(properties: Record<string, unknown>, fallback: number) {
   const configured = Number(properties.animationDuration);
   return Number.isFinite(configured) ? Math.max(0, configured) : Math.max(0, fallback);
 }
 
+/** 对来自 JSON 的未知值做白名单校验，避免生成不存在的 CSS 类名。 */
 function resolvePresentationAnimation(value: unknown): PresentationAnimation {
   return value === "fade" || value === "slide-left" || value === "slide-right" ? value : "none";
 }
 
+/**
+ * 进度条数值解析：编辑模式固定为 50% 方便预览，展示模式根据属性选择
+ * 当前对象进度或整条时间轴进度，并统一夹紧到 0～1。
+ */
 function resolveProgress(mode: PluginRenderMode, playback: PluginPlaybackContext | undefined, progressMode: unknown) {
   if (mode === "editor") return 0.5;
   const value = progressMode === "timeline" ? playback?.timelineProgress : playback?.itemProgress;
   return Math.max(0, Math.min(1, Number(value) || 0));
 }
 
+/**
+ * 文本和图片共用的交叉过渡容器。
+ * 切换时旧内容与新内容同时占据同一位置，分别执行退出和进入动画；transition.key
+ * 用于强制 React 为每次对象切换创建新的动画节点。
+ */
 function TransitionLayers({
   animation,
   current,
@@ -50,6 +63,7 @@ function TransitionLayers({
   previous: ReactNode;
   transition?: PluginTransitionContext;
 }) {
+  // 编辑模式、禁用动画或零时长时只渲染当前层，避免无意义的叠层结构。
   if (mode !== "presentation" || !transition || animation === "none" || duration === 0) {
     return current;
   }
@@ -74,6 +88,7 @@ function TransitionLayers({
   );
 }
 
+/** 纯文本内容渲染，过渡容器会分别用当前值和旧值调用它。 */
 function renderTextContent(value: unknown, properties: Record<string, unknown>) {
   return (
     <div
@@ -91,6 +106,7 @@ function renderTextContent(value: unknown, properties: Record<string, unknown>) 
   );
 }
 
+/** 图片内容渲染，同时处理无效路径、暗色遮罩和数据对象标识。 */
 function renderImageContent(value: unknown, item: DataItem, properties: Record<string, unknown>) {
   return (
     <div className="plugin-image" style={{ borderRadius: Number(properties.radius), backgroundColor: "#ced3ca" }}>
@@ -103,6 +119,12 @@ function renderImageContent(value: unknown, item: DataItem, properties: Record<s
   );
 }
 
+/**
+ * 将插件允许的多种输入形态规范化为“标签-数值”列表：
+ * - 单个数字成为一条记录；
+ * - 数字数组按序号命名；对象数组读取首个数值字段及 label/name；
+ * - 普通对象保留所有数值字段。
+ */
 function toChartEntries(value: unknown): Array<[string, number]> {
   if (typeof value === "number") return [["数值", value]];
   if (Array.isArray(value)) {
@@ -126,6 +148,10 @@ function toChartEntries(value: unknown): Array<[string, number]> {
   return [];
 }
 
+/**
+ * 内置插件注册表，也是插件系统的单一事实来源。
+ * 编辑器组件库、属性表单、数据绑定筛选和最终渲染都读取这里的声明。
+ */
 export const PLUGIN_REGISTRY: Record<string, PluginDefinition> = {
   "builtin.text": {
     type: "builtin.text",
@@ -153,6 +179,7 @@ export const PLUGIN_REGISTRY: Record<string, PluginDefinition> = {
       { key: "animationDuration", label: "动画时长 / ms", type: "number", min: 0, max: 5000, step: 50 },
     ],
     render: ({ value, properties, mode, transition }) => {
+      // 组件级时长优先；缺失时使用展示运行时传入的项目级过渡时长。
       const duration = resolveAnimationDuration(properties, transition?.defaultDuration ?? 400);
       const animation = resolvePresentationAnimation(properties.animation);
       return (
@@ -228,7 +255,9 @@ export const PLUGIN_REGISTRY: Record<string, PluginDefinition> = {
     ],
     render: ({ value, properties, mode, transition }) => {
       const maxItems = Math.max(1, Number(properties.maxItems));
+      // 先规范化再截断，保证画布中最多出现 schema 允许的条目数。
       const currentEntries = toChartEntries(value).slice(0, maxItems);
+      // 数值插值只在展示模式的对象切换窗口内启用，编辑预览保持静态。
       const shouldAnimate = mode === "presentation"
         && Boolean(transition)
         && properties.animateValues !== "off"
@@ -236,11 +265,13 @@ export const PLUGIN_REGISTRY: Record<string, PluginDefinition> = {
       const previousEntries = shouldAnimate
         ? toChartEntries(transition?.previousValue).slice(0, maxItems)
         : [];
+      // 通过标签对齐前后两组数据；新标签从 0 出现，消失的标签向 0 收缩。
       const currentValues = new Map(currentEntries);
       const previousValues = new Map(previousEntries);
       const labels = shouldAnimate
         ? [...currentEntries.map(([label]) => label), ...previousEntries.map(([label]) => label).filter((label) => !currentValues.has(label))].slice(0, maxItems)
         : currentEntries.map(([label]) => label);
+      // 前后状态分别归一化，确保各自最大值占满轨道；负值按 0 处理。
       const currentMax = Math.max(1, ...currentEntries.map(([, number]) => Math.max(0, number)));
       const previousMax = Math.max(1, ...previousEntries.map(([, number]) => Math.max(0, number)));
       const duration = resolveAnimationDuration(properties, transition?.defaultDuration ?? 400);
@@ -258,6 +289,7 @@ export const PLUGIN_REGISTRY: Record<string, PluginDefinition> = {
             };
 
             if (shouldAnimate) {
+              // CSS 关键帧读取两个自定义属性，实现从旧值宽度到新值宽度的过渡。
               barStyle["--chart-from-width"] = `${fromWidth}%`;
               barStyle["--chart-to-width"] = `${toWidth}%`;
               barStyle.animationDuration = `${duration}ms`;
@@ -269,6 +301,7 @@ export const PLUGIN_REGISTRY: Record<string, PluginDefinition> = {
                 <div style={{ backgroundColor: String(properties.barColor) }}>
                   <i
                     className={shouldAnimate ? "is-value-animating" : undefined}
+                    /* 每次切换都更新 key，使同标签连续切换时也能重新触发 CSS 动画。 */
                     key={`${label}-${transition?.key ?? 0}`}
                     style={barStyle}
                   />
@@ -286,6 +319,7 @@ export const PLUGIN_REGISTRY: Record<string, PluginDefinition> = {
     name: "进度条",
     glyph: "▰",
     description: "对象或时间轴播放进度",
+    // 进度来自播放上下文而非 DataItem，因此不声明数据绑定类型。
     acceptedTypes: [],
     defaultSize: { width: 520, height: 24 },
     minimumSize: { width: 8, height: 8 },
@@ -307,6 +341,7 @@ export const PLUGIN_REGISTRY: Record<string, PluginDefinition> = {
       const direction = properties.direction === "vertical" ? "vertical" : "horizontal";
       const progress = resolveProgress(mode, playback, properties.progressMode);
       const radius = Math.max(0, Number(properties.radius) || 0);
+      // 使用 transform 而不是修改 width/height，减少播放时的布局计算。
       const fillTransform = direction === "vertical" ? `scaleY(${progress})` : `scaleX(${progress})`;
 
       return (
@@ -326,6 +361,10 @@ export const PLUGIN_REGISTRY: Record<string, PluginDefinition> = {
   },
 };
 
+/**
+ * 编辑器与展示运行时共用的插件入口。
+ * 它负责未知插件兜底，并把默认属性与实例属性合并后交给插件自身渲染。
+ */
 export function PluginRenderer({ pluginType, value, item, properties, mode = "editor", playback, transition }: {
   pluginType: string;
   value: unknown;
@@ -340,6 +379,7 @@ export function PluginRenderer({ pluginType, value, item, properties, mode = "ed
   return plugin.render({
     value,
     item,
+    // 默认值在前，项目实例值在后；旧项目因此可自动获得新增加的属性。
     properties: { ...plugin.defaultProperties, ...properties },
     mode,
     playback,

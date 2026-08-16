@@ -1,3 +1,4 @@
+/* 全局设计令牌与基础重置：颜色变量供编辑器和展示模式共同复用。 */
 :root { --ink:#17211d; --muted:#758079; --line:#dfe3dc; --panel:#fafbf8; --lime:#d6f15a; --orange:#ee6b4d; }
 * { box-sizing:border-box; }
 html, body { margin:0; min-height:100%; overflow:hidden; }
@@ -5,7 +6,10 @@ body { color:var(--ink); background:#e9ebe6; font-family:var(--font-geist-sans),
 button, input, select { font:inherit; }
 button { color:inherit; }
 
+/* 编辑器总体网格：顶部工具栏、三列工作区和底部时间轴。 */
 .studio-shell { display:grid; grid-template:64px minmax(0,1fr) 116px / 264px minmax(480px,1fr) 304px; width:100vw; height:100vh; background:#e8ebe5; }
+
+/* 顶部工具栏与项目状态。 */
 .topbar { grid-column:1/-1; display:flex; align-items:center; gap:24px; padding:0 18px; background:#f9faf7; border-bottom:1px solid #d9ddd6; z-index:20; }
 .brand { width:222px; display:flex; align-items:center; gap:11px; }
 .brand-mark { width:32px; height:32px; border-radius:8px; background:var(--ink); display:flex; align-items:flex-end; gap:3px; padding:7px; }
@@ -25,6 +29,7 @@ button { color:inherit; }
 .icon { display:inline-flex; min-width:12px; justify-content:center; align-items:center; font-family:Arial,sans-serif; font-weight:700; }
 .icon-play { font-size:9px; } .icon-upload,.icon-download { margin-right:4px; }
 
+/* 左侧组件/图层面板和右侧属性面板的共享骨架。 */
 .left-panel,.right-panel { min-height:0; background:var(--panel); display:flex; flex-direction:column; }
 .left-panel { grid-row:2; border-right:1px solid #d9ddd6; }
 .right-panel { grid-row:2; grid-column:3; border-left:1px solid #d9ddd6; overflow:hidden; }
@@ -50,6 +55,7 @@ button { color:inherit; }
 .health-icon { width:24px; height:24px; display:grid; place-items:center; border-radius:50%; color:#fff; background:#67996b; font-size:12px; }
 .data-health strong,.data-health small { display:block; } .data-health strong { font-size:10px; } .data-health small { margin-top:2px; font-size:9px; color:#788879; }
 
+/* 中央工作区：点阵背景、缩放后的逻辑画布以及拖拽选中控件。 */
 .workspace { grid-row:2; grid-column:2; min-width:0; min-height:0; position:relative; display:grid; place-items:center; overflow:hidden; background:#dfe2dc; background-image:radial-gradient(#c7cbc5 1px,transparent 1px); background-size:18px 18px; }
 .workspace::before { content:""; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.24),transparent 40%); pointer-events:none; }
 .workspace-meta { position:absolute; top:14px; left:18px; right:18px; display:flex; justify-content:space-between; color:#7d8680; font:500 10px var(--font-geist-mono); }
@@ -65,11 +71,14 @@ button { color:inherit; }
 .toast { position:absolute; left:50%; bottom:14px; transform:translateX(-50%); padding:7px 11px; border-radius:7px; background:rgba(24,34,29,.84); color:#fff; font-size:10px; animation:toast-in 2.6s both; pointer-events:none; }
 @keyframes toast-in { 0% { opacity:0; transform:translate(-50%,6px); } 12%,75% { opacity:1; transform:translate(-50%,0); } 100% { opacity:0; } }
 
+/* 内置文本和图片插件的基础外观。 */
 .plugin-text { width:100%; height:100%; display:flex; align-items:center; line-height:1.06; white-space:normal; overflow:hidden; text-wrap:balance; }
 .plugin-image { position:relative; width:100%; height:100%; overflow:hidden; }
 .plugin-image img { width:100%; height:100%; display:block; pointer-events:none; }
 .plugin-image>span { width:100%; height:100%; display:grid; place-items:center; color:#6f7972; font-size:18px; }
 .plugin-image i { position:absolute; inset:0; pointer-events:none; } .plugin-image b { position:absolute; right:22px; bottom:20px; padding:7px 10px; border:1px solid rgba(255,255,255,.35); color:#fff; font:600 12px var(--font-geist-mono); letter-spacing:.1em; backdrop-filter:blur(5px); }
+
+/* 仅展示模式启用的双层交叉过渡；编辑模式不会生成这些动画层。 */
 .presentation-shell .plugin-transition-stack { position:relative; width:100%; height:100%; overflow:hidden; }
 .presentation-shell .plugin-transition-layer { position:absolute; inset:0; width:100%; height:100%; will-change:opacity,transform; animation-fill-mode:both; animation-timing-function:cubic-bezier(.22,1,.36,1); }
 .presentation-shell .plugin-transition-out { pointer-events:none; }
@@ -85,6 +94,8 @@ button { color:inherit; }
 @keyframes plugin-slide-left-out { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(9%); } }
 @keyframes plugin-slide-right-in { from { opacity:0; transform:translateX(9%); } to { opacity:1; transform:translateX(0); } }
 @keyframes plugin-slide-right-out { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(-9%); } }
+
+/* 条形图及其对象切换时的数值宽度插值。 */
 .plugin-chart { width:100%; height:100%; display:flex; flex-direction:column; justify-content:space-between; gap:11px; overflow:hidden; }
 .chart-row { min-height:28px; display:grid; grid-template-columns:112px 1fr 34px; gap:12px; align-items:center; font-size:16px; }
 .chart-row>span { font-size:15px; font-weight:550; } .chart-row>div { height:7px; border-radius:5px; overflow:hidden; } .chart-row i { display:block; height:100%; border-radius:5px; }
@@ -92,11 +103,14 @@ button { color:inherit; }
 @keyframes chart-value-change { from { width:var(--chart-from-width); } to { width:var(--chart-to-width); } }
 .chart-row strong { font:650 15px var(--font-geist-mono); text-align:right; }
 .chart-empty,.plugin-missing { width:100%; height:100%; display:grid; place-items:center; border:1px dashed #a8b0aa; color:#7f8983; }
+
+/* 进度条使用 transform-origin 决定横向从左、纵向从底部开始填充。 */
 .plugin-progress { width:100%; height:100%; overflow:hidden; }
 .plugin-progress>span { display:block; width:100%; height:100%; will-change:transform; }
 .plugin-progress-horizontal>span { transform-origin:left center; }
 .plugin-progress-vertical>span { transform-origin:center bottom; }
 
+/* 右侧属性检查器：绑定预览、几何表单及 schema 驱动的属性控件。 */
 .inspector-content { min-height:0; overflow:auto; padding-bottom:24px; }
 .inspector-hero { display:grid; grid-template-columns:40px 1fr 28px 28px; align-items:center; gap:8px; padding:14px 16px; border-bottom:1px solid #e2e6df; }
 .large-plugin-glyph { width:40px; height:40px; display:grid; place-items:center; border-radius:8px; background:#e7ebe3; font:700 17px var(--font-geist-mono); }
@@ -118,6 +132,7 @@ select:focus,input:focus { border-color:#9eaaa1; box-shadow:0 0 0 2px rgba(90,10
 .color-input input { width:20px; height:20px; padding:0; border:0; background:none; } .color-input code { color:#737c77; font:9px var(--font-geist-mono); }
 .toggle-row { display:flex; align-items:center; justify-content:space-between; } .toggle-row strong,.toggle-row small { display:block; } .toggle-row strong { font-size:10px; } .toggle-row small { margin-top:3px; color:#969e99; font-size:9px; } .toggle-row input { accent-color:#53665b; }
 
+/* 编辑模式底部对象时间轴。 */
 .timeline-panel { grid-column:1/-1; grid-row:3; display:grid; grid-template-columns:210px 1fr 130px; align-items:center; gap:12px; padding:13px 18px; background:#f7f8f5; border-top:1px solid #d6dad4; z-index:10; }
 .timeline-labels span,.timeline-labels small { display:block; } .timeline-labels span { font-size:12px; font-weight:700; } .timeline-labels small { margin-top:6px; color:#919a94; font-size:9px; }
 .timeline-items { min-width:0; display:flex; gap:8px; overflow-x:auto; padding:3px; }
@@ -128,6 +143,7 @@ select:focus,input:focus { border-color:#9eaaa1; box-shadow:0 0 0 2px rgba(90,10
 .timeline-card strong,.timeline-card small { display:block; max-width:145px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .timeline-card strong { font-size:10px; } .timeline-card small { margin-top:5px; color:#969e99; font-size:9px; }
 .timeline-summary { text-align:right; } .timeline-summary span,.timeline-summary strong { display:block; } .timeline-summary span { color:#909994; font-size:9px; } .timeline-summary strong { margin-top:4px; font:650 17px var(--font-geist-mono); }
 
+/* 全屏展示模式：画布居中缩放，播放控制悬浮在视口上方。 */
 .presentation-shell { position:fixed; inset:0; overflow:hidden; background:#0f1512; }
 .presentation-canvas { left:50%; top:50%; transform-origin:center; translate:-50% -50%; }
 .floating-exit { position:fixed; top:22px; right:24px; z-index:100; height:36px; padding:0 9px 0 13px; border:1px solid rgba(255,255,255,.18); border-radius:8px; background:rgba(19,28,23,.72); color:#fff; font-size:11px; backdrop-filter:blur(12px); cursor:pointer; }
@@ -136,6 +152,8 @@ select:focus,input:focus { border-color:#9eaaa1; box-shadow:0 0 0 2px rgba(90,10
 .presentation-controls button { width:36px; height:36px; border:0; border-radius:8px; background:transparent; color:#fff; cursor:pointer; font-size:20px; } .presentation-controls button:hover { background:rgba(255,255,255,.1); }
 .presentation-controls .primary-control { background:var(--lime); color:var(--ink); font-size:13px; }
 .presentation-counter { min-width:76px; padding:0 10px 0 7px; text-align:center; } .presentation-counter strong { font:600 13px var(--font-geist-mono); } .presentation-counter span { color:#8e9b93; font:10px var(--font-geist-mono); }
+
+/* 小屏幕逐步收窄侧栏；更窄时隐藏属性面板和次要工具栏信息。 */
 @media (max-width:1100px) {
   .studio-shell { grid-template-columns:224px minmax(420px,1fr) 260px; }
   .brand { width:180px; } .button.subtle { display:none; }
