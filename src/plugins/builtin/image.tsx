@@ -81,7 +81,7 @@ function renderImageContent(value: unknown, item: DataItem, properties: Record<s
 }
 
 /** 图片插件：负责按绑定路径展示数据对象中的图片。 */
-export const imagePlugin: PluginDefinition = {
+export const imagePlugin = {
   type: "builtin.image",
   name: "图片",
   glyph: "▧",
@@ -116,4 +116,4 @@ export const imagePlugin: PluginDefinition = {
       />
     );
   },
-};
+} satisfies PluginDefinition;

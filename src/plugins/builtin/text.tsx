@@ -85,7 +85,7 @@ function renderTextContent(value: unknown, properties: Record<string, unknown>) 
 }
 
 /** 文本插件：负责标题、正文和数字字段的展示。 */
-export const textPlugin: PluginDefinition = {
+export const textPlugin = {
   type: "builtin.text",
   name: "文本",
   glyph: "T",
@@ -125,4 +125,4 @@ export const textPlugin: PluginDefinition = {
       />
     );
   },
-};
+} satisfies PluginDefinition;

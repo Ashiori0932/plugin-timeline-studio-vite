@@ -43,7 +43,7 @@ function toChartEntries(value: unknown): Array<[string, number]> {
 }
 
 /** 条形图插件：把数字、数组或对象字段转换为横向条形图。 */
-export const chartPlugin: PluginDefinition = {
+export const chartPlugin = {
   type: "builtin.chart",
   name: "条形图",
   glyph: "▥",
@@ -126,4 +126,4 @@ export const chartPlugin: PluginDefinition = {
       </div>
     );
   },
-};
+} satisfies PluginDefinition;

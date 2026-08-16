@@ -15,7 +15,7 @@ function resolveProgress(mode: PluginRenderMode, playback: PluginPlaybackContext
 }
 
 /** 进度条插件：显示当前对象或整个时间轴的播放进度。 */
-export const progressPlugin: PluginDefinition = {
+export const progressPlugin = {
   type: "builtin.progress",
   name: "进度条",
   glyph: "▰",
@@ -59,4 +59,4 @@ export const progressPlugin: PluginDefinition = {
       </div>
     );
   },
-};
+} satisfies PluginDefinition;
