@@ -1,11 +1,17 @@
 import type { ProjectDocument } from "../types/project";
 
+/** 将毫秒转换成适合时间轴卡片展示的紧凑秒数。 */
 function formatTime(milliseconds: number) {
   const seconds = Math.max(0, milliseconds) / 1000;
   return `${seconds.toFixed(seconds >= 10 ? 0 : 1)}s`;
 }
 
+/**
+ * 编辑模式的对象时间轴。
+ * 该面板只切换静态预览对象，不启动计时；真实播放进度由 PresentationRuntime 管理。
+ */
 export function TimelinePanel({ project, activeIndex, onSelect }: { project: ProjectDocument; activeIndex: number; onSelect: (index: number) => void }) {
+  // 每个数据对象可覆盖默认时长，未设置时使用项目时间轴的统一值。
   const total = project.items.reduce((sum, item) => sum + (item.duration ?? project.timeline.defaultDuration), 0);
   return (
     <section className="timeline-panel">

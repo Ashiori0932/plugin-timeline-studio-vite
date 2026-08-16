@@ -1,11 +1,13 @@
 import type { DataItem, ProjectDocument } from "../types/project";
 
+/** 创建首次启动和缓存损坏时使用的完整示例项目。 */
 export function createDefaultProject(): ProjectDocument {
   return {
     version: 1,
     name: "2026 产业观察",
     canvas: { width: 1600, height: 900, gridSize: 8, background: "#eef0e8" },
     timeline: { defaultDuration: 8000, transitionDuration: 400, loop: true },
+    // 三个对象具有相同字段结构，用于演示时间轴切换和插件复用。
     items: [
       {
         id: "manufacturing",
@@ -35,6 +37,7 @@ export function createDefaultProject(): ProjectDocument {
         metrics: { 城市感知: 88, 交通优化: 74, 建筑节能: 61, 公共服务: 56 },
       },
     ],
+    // 组件只保存字段绑定与布局；具体内容始终来自当前时间轴对象。
     components: [
       { id: "hero-image", pluginType: "builtin.image", binding: "image", x: 840, y: 56, width: 704, height: 788, zIndex: 1, properties: { fit: "cover", radius: 8, overlay: 18 } },
       { id: "eyebrow", pluginType: "builtin.text", binding: "eyebrow", x: 72, y: 88, width: 650, height: 48, zIndex: 2, properties: { fontSize: 18, color: "#607165", weight: "700", align: "left", letterSpacing: 3 } },
@@ -45,6 +48,10 @@ export function createDefaultProject(): ProjectDocument {
   };
 }
 
+/**
+ * 规范化仅包含业务数据的 JSON。
+ * 同时支持直接传入对象数组，或传入 `{ items: [...] }` 包装结构。
+ */
 export function normalizeImportedData(input: unknown): DataItem[] {
   const candidate = Array.isArray(input)
     ? input
@@ -60,6 +67,7 @@ export function normalizeImportedData(input: unknown): DataItem[] {
   }
 
   const items = candidate as DataItem[];
+  // duration 会直接参与除法和 requestAnimationFrame 计时，因此在入口处排除非法值。
   items.forEach((item, index) => {
     if (item.duration !== undefined && (typeof item.duration !== "number" || item.duration < 100)) {
       throw new Error(`第 ${index + 1} 项的 duration 必须是不小于 100 的数字`);
@@ -68,6 +76,10 @@ export function normalizeImportedData(input: unknown): DataItem[] {
   return items;
 }
 
+/**
+ * 校验完整项目文件的版本和必要顶层结构。
+ * 业务 items 继续复用 normalizeImportedData，保证“导入数据”和“打开项目”规则一致。
+ */
 export function normalizeProject(input: unknown): ProjectDocument {
   if (!input || typeof input !== "object") throw new Error("项目文件格式无效");
   const project = input as Partial<ProjectDocument>;

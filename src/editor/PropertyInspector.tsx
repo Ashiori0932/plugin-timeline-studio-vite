@@ -13,7 +13,12 @@ type Props = {
   onDelete: () => void;
 };
 
+/**
+ * 右侧属性检查器。
+ * 选中组件时显示其数据绑定、几何信息及插件声明的属性；未选中时编辑画布和时间轴。
+ */
 export function PropertyInspector({ project, activeItem, selected, onUpdateProject, onUpdateComponent, onDuplicate, onDelete }: Props) {
+  // 导入的旧项目可能引用已移除的插件，因此查找结果允许为空并回退到画布属性。
   const plugin = selected ? PLUGIN_REGISTRY[selected.pluginType] : null;
 
   return (
@@ -30,11 +35,13 @@ export function PropertyInspector({ project, activeItem, selected, onUpdateProje
             <button onClick={onDuplicate} aria-label="复制组件"><Icon name="copy" /></button>
             <button onClick={onDelete} aria-label="删除组件"><Icon name="trash" /></button>
           </div>
+          {/* acceptedTypes 为空的运行时插件不显示无意义的数据绑定控件。 */}
           {plugin.acceptedTypes.length > 0 && (
             <InspectorGroup title="数据绑定">
               <label className="field-label">内容字段</label>
               <div className="select-wrap">
                 <select value={selected.binding} onChange={(event) => onUpdateComponent(selected.id, (component) => ({ ...component, binding: event.target.value }))}>
+                  {/* 可选字段只根据当前数据对象生成，并由插件声明的数据类型过滤。 */}
                   {getCompatibleBindings(activeItem, plugin.acceptedTypes).map((binding) => (
                     <option key={binding.path} value={binding.path}>{binding.path} · {binding.type}</option>
                   ))}
@@ -55,17 +62,21 @@ export function PropertyInspector({ project, activeItem, selected, onUpdateProje
             </div>
           </InspectorGroup>
           <InspectorGroup title="组件样式">
+            {/* 属性表单完全由插件 schema 驱动，核心编辑器无需了解每种插件的专有字段。 */}
             {plugin.propertySchema.map((property) => (
               <PropertyEditor
                 key={property.key}
                 property={property}
+                // 旧项目缺少新属性时回退到插件默认值，以保持向后兼容。
                 value={selected.properties[property.key] ?? plugin.defaultProperties[property.key]}
+                // 复制 properties 后只覆盖当前键，保持不可变更新语义。
                 onChange={(value) => onUpdateComponent(selected.id, (component) => ({ ...component, properties: { ...component.properties, [property.key]: value } }))}
               />
             ))}
           </InspectorGroup>
         </div>
       ) : (
+        // 没有有效组件选中时，属性面板切换为项目级设置。
         <div className="inspector-content">
           <InspectorGroup title="画布">
             <PropertyEditor property={{ key: "background", label: "背景颜色", type: "color" }} value={project.canvas.background} onChange={(value) => onUpdateProject((current) => ({ ...current, canvas: { ...current.canvas, background: String(value) } }))} />

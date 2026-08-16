@@ -1,16 +1,21 @@
+# 将 main 分支的 Vite 生产构建发布到 GitHub Pages。
 name: Deploy Vite app to GitHub Pages
 
 on:
+  # 只有进入主分支的代码才自动发布，功能分支不会覆盖线上页面。
   push:
     branches:
       - main
+  # 保留手动入口，便于在配置变更或临时故障后重新执行部署。
   workflow_dispatch:
 
+# 使用 OIDC 向 Pages 部署，无需在仓库中保存长期密钥。
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# 同一时间只保留最新一次 Pages 部署，避免旧提交后完成而覆盖新版本。
 concurrency:
   group: pages
   cancel-in-progress: true
@@ -24,24 +29,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 拉取触发本次工作流的 main 分支提交。
       - name: Checkout
         uses: actions/checkout@v7
 
+      # Node 主版本与 package.json 的 engines 声明保持一致，并启用 npm 缓存。
       - name: Setup Node.js
         uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
 
+      # npm ci 严格依据锁文件安装，确保 CI 与本地依赖版本一致。
       - name: Install dependencies
         run: npm ci
 
+      # build 会先执行 TypeScript 检查，再由 Vite 生成 dist。
       - name: Build
         run: npm run build
 
       - name: Configure Pages
         uses: actions/configure-pages@v6
 
+      # Pages 只需要最终静态产物，不上传源码和 node_modules。
       - name: Upload build result
         uses: actions/upload-pages-artifact@v5
         with:
