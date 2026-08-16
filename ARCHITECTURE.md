@@ -55,7 +55,12 @@
 │   │   ├── project.ts              # 默认项目、数据导入和项目规范化
 │   │   └── bindings.ts             # 字段路径读取与插件绑定候选扫描
 │   ├── plugins/
-│   │   └── registry.tsx            # 内置插件定义、注册表与统一渲染入口
+│   │   ├── registry.tsx            # 插件汇总注册表与统一渲染入口
+│   │   └── builtin/
+│   │       ├── text.tsx            # 文本插件及其展示动画
+│   │       ├── image.tsx           # 图片插件及其展示动画
+│   │       ├── chart.tsx           # 条形图插件及其数值动画
+│   │       └── progress.tsx        # 对象/时间轴进度条插件
 │   ├── editor/
 │   │   ├── EditorApp.tsx           # 编辑模式的状态协调与业务操作
 │   │   ├── EditorCanvas.tsx        # 画布缩放、拖动、缩放和网格吸附
@@ -357,7 +362,7 @@ string | number | boolean | array | object
 
 ### 9.1 注册表
 
-所有插件集中注册在 `PLUGIN_REGISTRY`：
+所有插件都在各自文件中导出一个 `PluginDefinition`，再由 `registry.tsx` 导入并集中注册到 `PLUGIN_REGISTRY`：
 
 ```ts
 Record<string, PluginDefinition>
@@ -373,6 +378,8 @@ Record<string, PluginDefinition>
 | `builtin.progress` | 运行时播放状态 | 显示当前对象或整个时间轴的播放进度 |
 
 `PluginRenderer` 是统一入口。若 `pluginType` 不存在，会渲染“未知插件”占位内容，而不是让整个页面崩溃。
+
+当前每个插件是自包含模块。插件专用的输入转换、属性选项和动画实现均保留在对应插件文件中，即使文本和图片的交叉过渡代码存在少量重复，也不建立跨插件的 `shared` 依赖。这样复制、移除或独立修改某个插件时，不需要同时迁移公共辅助模块。
 
 ### 9.2 图表数据转换
 
@@ -400,16 +407,18 @@ Record<string, PluginDefinition>
 
 以新增徽章插件为例：
 
-1. 在 `src/plugins/registry.tsx` 中新增唯一注册键。
-2. 声明接受的数据类型。
-3. 提供默认尺寸与完整的默认属性。
-4. 使用 `propertySchema` 声明属性面板。
-5. 实现纯渲染函数，并处理空值和错误值。
-6. 在 `src/styles/index.css` 添加插件内部样式。
-7. 使用多条时间轴数据验证类型兼容和切换效果。
+1. 在 `src/plugins/builtin/` 中创建独立插件文件。
+2. 导出一个拥有唯一 `type` 的 `PluginDefinition`。
+3. 声明接受的数据类型。
+4. 提供默认尺寸与完整的默认属性。
+5. 使用 `propertySchema` 声明属性面板。
+6. 在插件文件中实现渲染函数及该插件专用的辅助/动画逻辑，并处理空值和错误值。
+7. 在 `src/plugins/registry.tsx` 中导入并注册插件。
+8. 在 `src/styles/index.css` 添加插件内部样式。
+9. 使用多条时间轴数据验证类型兼容和切换效果。
 
 ```tsx
-"builtin.badge": {
+export const badgePlugin: PluginDefinition = {
   type: "builtin.badge",
   name: "徽章",
   glyph: "●",
@@ -432,7 +441,18 @@ Record<string, PluginDefinition>
       {value == null ? "未绑定" : String(value)}
     </div>
   ),
-},
+};
+```
+
+在 `registry.tsx` 中完成汇总：
+
+```tsx
+import { badgePlugin } from "./builtin/badge";
+
+export const PLUGIN_REGISTRY: Record<string, PluginDefinition> = {
+  // 其他内置插件……
+  [badgePlugin.type]: badgePlugin,
+};
 ```
 
 如果只使用现有属性类型，新增插件通常不需要修改 `EditorApp`、`EditorCanvas`、`PropertyInspector` 或 `PresentationRuntime`。
@@ -747,7 +767,7 @@ checkout
 
 | 现状 | 影响 | 建议方向 |
 | --- | --- | --- |
-| 插件在单一注册表中静态编译 | 不能运行时安装第三方插件 | 后续可拆分插件模块，但仍应保留统一类型契约 |
+| 插件模块由注册表静态导入 | 不能运行时安装第三方插件 | 保留统一类型契约，未来可增加受控的动态插件加载机制 |
 | 项目校验较浅 | 非法项目文件可能产生异常布局或属性 | 引入 Schema 校验和版本迁移 |
 | 绑定候选只扫描当前项 | 其他时间项可能缺字段或类型不一致 | 增加跨项字段健康检查 |
 | 绑定递归最多 4 层 | 更深嵌套字段不可选 | 将深度做成配置或改用安全路径索引 |
@@ -780,10 +800,11 @@ checkout
 3. `src/App.tsx`：理解顶层状态与模式切换。
 4. `src/editor/EditorApp.tsx`：理解编辑操作如何更新项目。
 5. `src/core/bindings.ts`：理解 JSON 字段如何映射到组件。
-6. `src/plugins/registry.tsx`：理解插件如何声明与渲染。
-7. `src/editor/EditorCanvas.tsx`：理解坐标、缩放和交互。
-8. `src/runtime/PresentationRuntime.tsx`：理解时间轴播放。
-9. `src/styles/index.css`：最后理解界面区域和视觉实现。
+6. `src/plugins/registry.tsx`：理解插件如何汇总以及统一渲染入口。
+7. `src/plugins/builtin/*.tsx`：理解各插件如何独立声明属性与渲染逻辑。
+8. `src/editor/EditorCanvas.tsx`：理解坐标、缩放和交互。
+9. `src/runtime/PresentationRuntime.tsx`：理解时间轴播放。
+10. `src/styles/index.css`：最后理解界面区域和视觉实现。
 
 掌握以上链路后，可以把整个项目概括为：
 
