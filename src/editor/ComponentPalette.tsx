@@ -5,6 +5,9 @@ import { Icon } from "./ui";
 type Props = {
   project: ProjectDocument;
   selectedId: string | null;
+  isCollapsed: boolean;
+  onToggleCollapsed: () => void;
+  onPanelFocus: () => void;
   onSelect: (id: string) => void;
   onAdd: (type: string) => void;
 };
@@ -13,9 +16,12 @@ type Props = {
  * 左侧组件库与图层面板。
  * 组件卡片直接由插件注册表生成，所以注册新插件后会自动出现在此处。
  */
-export function ComponentPalette({ project, selectedId, onSelect, onAdd }: Props) {
+export function ComponentPalette({ project, selectedId, isCollapsed, onToggleCollapsed, onPanelFocus, onSelect, onAdd }: Props) {
   return (
-    <aside className="left-panel">
+    <aside className={`left-panel collapsible-panel ${isCollapsed ? "is-collapsed" : ""}`} onPointerDown={onPanelFocus}>
+      <button className="panel-tab panel-tab-left" type="button" onClick={onToggleCollapsed} aria-label={isCollapsed ? "展开左侧面板" : "收起左侧面板"}>
+        <Icon name="panel" />
+      </button>
       <div className="panel-heading"><span>组件库</span><small>{Object.keys(PLUGIN_REGISTRY).length} 个内置插件</small></div>
       <div className="plugin-list">
         {Object.values(PLUGIN_REGISTRY).map((plugin, index) => (
