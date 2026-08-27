@@ -27,6 +27,9 @@ export function EditorApp({ project, setProject, onPresent }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>("hero-title");
   const [activeIndex, setActiveIndex] = useState(0);
   const [toast, setToast] = useState("示例项目已就绪");
+  const [isCanvasZoomFocused, setIsCanvasZoomFocused] = useState(false);
+  const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);
+  const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
   // 数据被重新导入后，旧索引可能越界；取值时始终夹紧到最后一个有效对象。
   const activeItem = project.items[Math.min(activeIndex, project.items.length - 1)] ?? {};
   const selected = project.components.find((component) => component.id === selectedId) ?? null;
@@ -162,7 +165,7 @@ export function EditorApp({ project, setProject, onPresent }: Props) {
 
   return (
     // 五个区域共享同一份项目文档，通过回调执行单向数据更新。
-    <main className="studio-shell">
+    <main className={`studio-shell ${isLeftPanelCollapsed ? "left-collapsed" : ""} ${isRightPanelCollapsed ? "right-collapsed" : ""}`}>
       <TopBar
         project={project}
         onRename={(name) => setProject((current) => ({ ...current, name }))}
@@ -171,18 +174,38 @@ export function EditorApp({ project, setProject, onPresent }: Props) {
         onExport={exportProject}
         onPresent={onPresent}
       />
-      <ComponentPalette project={project} selectedId={selectedId} onSelect={setSelectedId} onAdd={addComponent} />
-      <EditorCanvas project={project} activeItem={activeItem} selectedId={selectedId} toast={toast} onSelect={setSelectedId} onUpdateComponent={updateComponent} />
+      <ComponentPalette
+        project={project}
+        selectedId={selectedId}
+        isCollapsed={isLeftPanelCollapsed}
+        onToggleCollapsed={() => setIsLeftPanelCollapsed((value) => !value)}
+        onPanelFocus={() => setIsCanvasZoomFocused(false)}
+        onSelect={setSelectedId}
+        onAdd={addComponent}
+      />
+      <EditorCanvas
+        project={project}
+        activeItem={activeItem}
+        selectedId={selectedId}
+        toast={toast}
+        isZoomFocused={isCanvasZoomFocused}
+        onZoomFocusChange={setIsCanvasZoomFocused}
+        onSelect={setSelectedId}
+        onUpdateComponent={updateComponent}
+      />
       <PropertyInspector
         project={project}
         activeItem={activeItem}
         selected={selected}
+        isCollapsed={isRightPanelCollapsed}
+        onToggleCollapsed={() => setIsRightPanelCollapsed((value) => !value)}
+        onPanelFocus={() => setIsCanvasZoomFocused(false)}
         onUpdateProject={updateProject}
         onUpdateComponent={updateComponent}
         onDuplicate={duplicateSelected}
         onDelete={deleteSelected}
       />
-      <TimelinePanel project={project} activeIndex={activeIndex} onSelect={setActiveIndex} />
+      <TimelinePanel project={project} activeIndex={activeIndex} onSelect={setActiveIndex} onPanelFocus={() => setIsCanvasZoomFocused(false)} />
     </main>
   );
 }
