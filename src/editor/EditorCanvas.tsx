@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointer
 import { getValueByPath } from "../core/bindings";
 import { PLUGIN_REGISTRY, PluginRenderer } from "../plugins/registry";
 import type { ComponentInstance, DataItem, ProjectDocument } from "../types/project";
+import { TimelinePanel } from "./TimelinePanel";
 
 type ResizeHandle = "nw" | "ne" | "sw" | "se";
 
@@ -24,6 +25,9 @@ type Props = {
   onZoomFocusChange: (focused: boolean) => void;
   onSelect: (id: string | null) => void;
   onUpdateComponent: (id: string, updater: (component: ComponentInstance) => ComponentInstance) => void;
+  activeIndex: number;
+  onTimelineSelect: (index: number) => void;
+  onTimelineFocus: () => void;
 };
 
 /** 将逻辑坐标吸附到网格；按住 Alt 时只取整像素，实现精细调整。 */
@@ -31,7 +35,7 @@ function snap(value: number, grid: number, disabled = false) {
   return disabled ? Math.round(value) : Math.round(value / grid) * grid;
 }
 
-export function EditorCanvas({ project, activeItem, selectedId, toast, isZoomFocused, onZoomFocusChange, onSelect, onUpdateComponent }: Props) {
+export function EditorCanvas({ project, activeItem, selectedId, toast, isZoomFocused, onZoomFocusChange, onSelect, onUpdateComponent, activeIndex, onTimelineSelect, onTimelineFocus }: Props) {
   const [scale, setScale] = useState(0.6);
   // stageRef 用于测量可用空间；dragRef 保存高频指针状态而不触发 React 重渲染。
   const stageRef = useRef<HTMLDivElement>(null);
@@ -182,6 +186,7 @@ export function EditorCanvas({ project, activeItem, selectedId, toast, isZoomFoc
           <div className="canvas-safe-label">安全区域</div>
         </div>
       </div>
+      <TimelinePanel project={project} activeIndex={activeIndex} onSelect={onTimelineSelect} onPanelFocus={onTimelineFocus} />
       <div className="toast" key={toast}>{toast}</div>
     </section>
   );

@@ -20,7 +20,7 @@ export function ComponentPalette({ project, selectedId, isCollapsed, onToggleCol
   return (
     <aside className={`left-panel collapsible-panel ${isCollapsed ? "is-collapsed" : ""}`} onPointerDown={onPanelFocus}>
       <button className="panel-tab panel-tab-left" type="button" onClick={onToggleCollapsed} aria-label={isCollapsed ? "展开左侧面板" : "收起左侧面板"}>
-        <Icon name="panel" />
+        <Icon name={isCollapsed ? "arrowRight" : "arrowLeft"} />
       </button>
       <div className="panel-heading"><span>组件库</span><small>{Object.keys(PLUGIN_REGISTRY).length} 个内置插件</small></div>
       <div className="plugin-list">

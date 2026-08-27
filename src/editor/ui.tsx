@@ -5,8 +5,8 @@ import type { PluginProperty } from "../types/project";
  * 无外部图标依赖的轻量图标组件。
  * 图标只用于视觉辅助，按钮本身负责无障碍名称，因此这里统一 aria-hidden。
  */
-export function Icon({ name }: { name: "play" | "pause" | "upload" | "download" | "plus" | "trash" | "copy" | "chevron" | "panel" | "timeline" }) {
-  const symbols = { play: "▶", pause: "Ⅱ", upload: "↥", download: "↧", plus: "+", trash: "×", copy: "⧉", chevron: "›", panel: "▰", timeline: "▤" };
+export function Icon({ name }: { name: "play" | "pause" | "upload" | "download" | "plus" | "trash" | "copy" | "chevron" | "timeline" | "arrowLeft" | "arrowRight" }) {
+  const symbols = { play: "▶", pause: "Ⅱ", upload: "↥", download: "↧", plus: "+", trash: "×", copy: "⧉", chevron: "›", timeline: "▤", arrowLeft: "‹", arrowRight: "›" };
   return <span className={`icon icon-${name}`} aria-hidden="true">{symbols[name]}</span>;
 }
 

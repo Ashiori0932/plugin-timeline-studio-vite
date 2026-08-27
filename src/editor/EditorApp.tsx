@@ -6,7 +6,6 @@ import type { ComponentInstance, ProjectDocument } from "../types/project";
 import { ComponentPalette } from "./ComponentPalette";
 import { EditorCanvas } from "./EditorCanvas";
 import { PropertyInspector } from "./PropertyInspector";
-import { TimelinePanel } from "./TimelinePanel";
 import { TopBar } from "./TopBar";
 
 type Props = {
@@ -192,6 +191,9 @@ export function EditorApp({ project, setProject, onPresent }: Props) {
         onZoomFocusChange={setIsCanvasZoomFocused}
         onSelect={setSelectedId}
         onUpdateComponent={updateComponent}
+        activeIndex={activeIndex}
+        onTimelineSelect={setActiveIndex}
+        onTimelineFocus={() => setIsCanvasZoomFocused(false)}
       />
       <PropertyInspector
         project={project}
@@ -205,7 +207,6 @@ export function EditorApp({ project, setProject, onPresent }: Props) {
         onDuplicate={duplicateSelected}
         onDelete={deleteSelected}
       />
-      <TimelinePanel project={project} activeIndex={activeIndex} onSelect={setActiveIndex} onPanelFocus={() => setIsCanvasZoomFocused(false)} />
     </main>
   );
 }

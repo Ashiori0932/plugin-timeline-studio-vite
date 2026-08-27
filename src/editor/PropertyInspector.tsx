@@ -27,7 +27,7 @@ export function PropertyInspector({ project, activeItem, selected, isCollapsed, 
   return (
     <aside className={`right-panel collapsible-panel ${isCollapsed ? "is-collapsed" : ""}`} onPointerDown={onPanelFocus}>
       <button className="panel-tab panel-tab-right" type="button" onClick={onToggleCollapsed} aria-label={isCollapsed ? "展开右侧面板" : "收起右侧面板"}>
-        <Icon name="panel" />
+        <Icon name={isCollapsed ? "arrowLeft" : "arrowRight"} />
       </button>
       <div className="panel-heading inspector-heading">
         <span>{selected ? "组件属性" : "画布属性"}</span>
