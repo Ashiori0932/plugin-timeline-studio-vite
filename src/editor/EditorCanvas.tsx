@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import { getValueByPath } from "../core/bindings";
 import { PLUGIN_REGISTRY, PluginRenderer } from "../plugins/registry";
 import type { ComponentInstance, DataItem, ProjectDocument } from "../types/project";
@@ -20,6 +20,8 @@ type Props = {
   activeItem: DataItem;
   selectedId: string | null;
   toast: string;
+  isZoomFocused: boolean;
+  onZoomFocusChange: (focused: boolean) => void;
   onSelect: (id: string | null) => void;
   onUpdateComponent: (id: string, updater: (component: ComponentInstance) => ComponentInstance) => void;
 };
@@ -29,7 +31,7 @@ function snap(value: number, grid: number, disabled = false) {
   return disabled ? Math.round(value) : Math.round(value / grid) * grid;
 }
 
-export function EditorCanvas({ project, activeItem, selectedId, toast, onSelect, onUpdateComponent }: Props) {
+export function EditorCanvas({ project, activeItem, selectedId, toast, isZoomFocused, onZoomFocusChange, onSelect, onUpdateComponent }: Props) {
   const [scale, setScale] = useState(0.6);
   // stageRef 用于测量可用空间；dragRef 保存高频指针状态而不触发 React 重渲染。
   const stageRef = useRef<HTMLDivElement>(null);
@@ -42,8 +44,8 @@ export function EditorCanvas({ project, activeItem, selectedId, toast, onSelect,
       const bounds = stage.getBoundingClientRect();
       // 画布保持项目中的逻辑尺寸，只缩放显示；四周各预留 36px 操作空间。
       const next = Math.min((bounds.width - 72) / project.canvas.width, (bounds.height - 72) / project.canvas.height, 1);
-      // 编辑画布最多按原尺寸显示，最小缩放限制可避免组件完全无法操作。
-      setScale(Math.max(0.15, next));
+      // 初始自适应后仍允许用户通过滚轮在 25%～400% 范围内缩放。
+      setScale(Math.max(0.25, Math.min(4, next)));
     };
     const observer = new ResizeObserver(updateScale);
     observer.observe(stage);
@@ -119,6 +121,7 @@ export function EditorCanvas({ project, activeItem, selectedId, toast, onSelect,
     if (event.button !== 0) return;
     event.stopPropagation();
     event.preventDefault();
+    onZoomFocusChange(true);
     onSelect(component.id);
     dragRef.current = {
       id: component.id,
@@ -131,8 +134,21 @@ export function EditorCanvas({ project, activeItem, selectedId, toast, onSelect,
     };
   }
 
+
+  function handleWorkspacePointerDown() {
+    onZoomFocusChange(true);
+    onSelect(null);
+  }
+
+  function handleWheel(event: ReactWheelEvent<HTMLElement>) {
+    if (!isZoomFocused) return;
+    event.preventDefault();
+    const zoomStep = event.deltaY > 0 ? -0.08 : 0.08;
+    setScale((current) => Math.max(0.25, Math.min(4, current + zoomStep)));
+  }
+
   return (
-    <section className="workspace" ref={stageRef} onPointerDown={() => onSelect(null)}>
+    <section className={`workspace ${isZoomFocused ? "is-zoom-focused" : ""}`} ref={stageRef} onPointerDown={handleWorkspacePointerDown} onWheel={handleWheel}>
       <div className="workspace-meta"><span>{project.canvas.width} × {project.canvas.height}</span><span>{Math.round(scale * 100)}%</span></div>
       <div className="scaled-canvas-frame" style={{ width: project.canvas.width * scale, height: project.canvas.height * scale }}>
         <div className="editor-canvas" style={{ ...canvasStyle, transform: `scale(${scale})` }} onPointerDown={(event) => event.stopPropagation()}>

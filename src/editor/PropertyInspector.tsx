@@ -7,6 +7,9 @@ type Props = {
   project: ProjectDocument;
   activeItem: DataItem;
   selected: ComponentInstance | null;
+  isCollapsed: boolean;
+  onToggleCollapsed: () => void;
+  onPanelFocus: () => void;
   onUpdateProject: (updater: (project: ProjectDocument) => ProjectDocument) => void;
   onUpdateComponent: (id: string, updater: (component: ComponentInstance) => ComponentInstance) => void;
   onDuplicate: () => void;
@@ -17,12 +20,15 @@ type Props = {
  * 右侧属性检查器。
  * 选中组件时显示其数据绑定、几何信息及插件声明的属性；未选中时编辑画布和时间轴。
  */
-export function PropertyInspector({ project, activeItem, selected, onUpdateProject, onUpdateComponent, onDuplicate, onDelete }: Props) {
+export function PropertyInspector({ project, activeItem, selected, isCollapsed, onToggleCollapsed, onPanelFocus, onUpdateProject, onUpdateComponent, onDuplicate, onDelete }: Props) {
   // 导入的旧项目可能引用已移除的插件，因此查找结果允许为空并回退到画布属性。
   const plugin = selected ? PLUGIN_REGISTRY[selected.pluginType] : null;
 
   return (
-    <aside className="right-panel">
+    <aside className={`right-panel collapsible-panel ${isCollapsed ? "is-collapsed" : ""}`} onPointerDown={onPanelFocus}>
+      <button className="panel-tab panel-tab-right" type="button" onClick={onToggleCollapsed} aria-label={isCollapsed ? "展开右侧面板" : "收起右侧面板"}>
+        <Icon name="panel" />
+      </button>
       <div className="panel-heading inspector-heading">
         <span>{selected ? "组件属性" : "画布属性"}</span>
         {selected && <small>#{selected.id.slice(-5)}</small>}
