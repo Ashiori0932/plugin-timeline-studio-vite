@@ -1,4 +1,4 @@
-import { useMemo, useState, type PointerEvent as ReactPointerEvent } from "react";
+import { useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import type { ProjectDocument } from "../types/project";
 import { Icon } from "./ui";
 
@@ -15,18 +15,67 @@ type Props = {
   onPanelFocus: () => void;
 };
 
+type TimelineDrag = {
+  pointerId: number;
+  startX: number;
+  scrollLeft: number;
+};
+
 /**
  * 编辑模式的对象时间轴。
- * 默认只保留画布内的展开悬浮按钮；展开后显示稳定的完整浮层，由收起按钮关闭。
+ * 默认只保留画布内的展开悬浮按钮；展开后显示稳定的完整浮层，由顶部收起按钮关闭。
  */
 export function TimelinePanel({ project, activeIndex, onSelect, onPanelFocus }: Props) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const itemsRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<TimelineDrag | null>(null);
+  const didDragRef = useRef(false);
   // 每个数据对象可覆盖默认时长，未设置时使用项目时间轴的统一值。
   const total = useMemo(() => project.items.reduce((sum, item) => sum + (item.duration ?? project.timeline.defaultDuration), 0), [project.items, project.timeline.defaultDuration]);
 
   function handlePointerDown(event: ReactPointerEvent<HTMLElement>) {
     event.stopPropagation();
     onPanelFocus();
+  }
+
+  function handleItemsWheel(event: ReactWheelEvent<HTMLDivElement>) {
+    event.preventDefault();
+    event.currentTarget.scrollLeft += event.deltaX || event.deltaY;
+  }
+
+  function startTimelineDrag(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) return;
+    handlePointerDown(event);
+    didDragRef.current = false;
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      scrollLeft: event.currentTarget.scrollLeft,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function moveTimelineDrag(event: ReactPointerEvent<HTMLDivElement>) {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId || !itemsRef.current) return;
+    const dx = event.clientX - drag.startX;
+    if (Math.abs(dx) > 3) didDragRef.current = true;
+    itemsRef.current.scrollLeft = drag.scrollLeft - dx;
+  }
+
+  function endTimelineDrag(event: ReactPointerEvent<HTMLDivElement>) {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    dragRef.current = null;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+  }
+
+  function selectTimelineItem(index: number) {
+    if (didDragRef.current) {
+      didDragRef.current = false;
+      return;
+    }
+    onSelect(index);
   }
 
   if (!isExpanded) {
@@ -42,18 +91,28 @@ export function TimelinePanel({ project, activeIndex, onSelect, onPanelFocus }: 
       <button className="timeline-collapse-button" type="button" onClick={() => setIsExpanded(false)} aria-label="收起完整时间轴">
         <Icon name="chevron" />
       </button>
-      <div className="timeline-items">
-        {project.items.map((item, index) => {
-          const duration = item.duration ?? project.timeline.defaultDuration;
-          return (
-            <button className={`timeline-card ${activeIndex === index ? "active" : ""}`} key={item.id ?? index} onClick={() => onSelect(index)}>
-              <span className="timeline-number">{String(index + 1).padStart(2, "0")}</span>
-              <span><strong>{String(item.title ?? item.id ?? `对象 ${index + 1}`)}</strong><small>{formatTime(duration)} · {Object.keys(item).length} 个字段</small></span>
-            </button>
-          );
-        })}
+      <div className="timeline-body">
+        <div
+          className="timeline-items"
+          ref={itemsRef}
+          onWheel={handleItemsWheel}
+          onPointerDown={startTimelineDrag}
+          onPointerMove={moveTimelineDrag}
+          onPointerUp={endTimelineDrag}
+          onPointerCancel={endTimelineDrag}
+        >
+          {project.items.map((item, index) => {
+            const duration = item.duration ?? project.timeline.defaultDuration;
+            return (
+              <button className={`timeline-card ${activeIndex === index ? "active" : ""}`} key={item.id ?? index} onClick={() => selectTimelineItem(index)}>
+                <span className="timeline-number">{String(index + 1).padStart(2, "0")}</span>
+                <span><strong>{String(item.title ?? item.id ?? `对象 ${index + 1}`)}</strong><small>{formatTime(duration)} · {Object.keys(item).length} 个字段</small></span>
+              </button>
+            );
+          })}
+        </div>
+        <div className="timeline-summary"><span>总时长</span><strong>{formatTime(total)}</strong></div>
       </div>
-      <div className="timeline-summary"><span>总时长</span><strong>{formatTime(total)}</strong></div>
     </section>
   );
 }

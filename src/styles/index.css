@@ -7,7 +7,7 @@ button, input, select { font:inherit; }
 button { color:inherit; }
 
 /* 编辑器总体网格：顶部工具栏与三列工作区。 */
-.studio-shell { --topbar-height:64px; position:relative; display:grid; grid-template:var(--topbar-height) minmax(0,1fr) / minmax(0,1fr); width:100vw; height:100vh; background:#e8ebe5; }
+.studio-shell { --topbar-height:64px; --left-panel-width:264px; --right-panel-width:304px; position:relative; display:grid; grid-template:var(--topbar-height) minmax(0,1fr) / minmax(0,1fr); width:100vw; height:100vh; background:#e8ebe5; }
 
 /* 顶部工具栏与项目状态。 */
 .topbar { grid-column:1/-1; display:flex; align-items:center; gap:24px; padding:0 18px; background:#f9faf7; border-bottom:1px solid #d9ddd6; z-index:20; }
@@ -42,8 +42,8 @@ button { color:inherit; }
 .right-panel.is-collapsed { transform:translateX(100%); }
 .left-panel.is-collapsed .panel-tab-left { transform:translateX(8px); }
 .right-panel.is-collapsed .panel-tab-right { transform:translateX(-8px); }
-.left-panel { --panel-width:264px; left:0; z-index:40; border-right:1px solid #d9ddd6; }
-.right-panel { --panel-width:304px; right:0; z-index:40; border-left:1px solid #d9ddd6; overflow:visible; }
+.left-panel { --panel-width:264px; --left-panel-width:264px; left:0; z-index:40; border-right:1px solid #d9ddd6; }
+.right-panel { --panel-width:304px; --right-panel-width:304px; right:0; z-index:40; border-left:1px solid #d9ddd6; overflow:visible; }
 .panel-heading { height:54px; flex:0 0 auto; padding:0 17px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #e4e7e1; font-size:12px; font-weight:700; letter-spacing:.04em; }
 .panel-heading small { font-size:10px; color:#929b95; font-weight:500; }
 .plugin-list { padding:12px; display:grid; gap:7px; }
@@ -147,11 +147,15 @@ select:focus,input:focus { border-color:#9eaaa1; box-shadow:0 0 0 2px rgba(90,10
 /* 编辑模式画布内悬浮对象时间轴。 */
 .timeline-float-button { position:absolute; left:50%; bottom:18px; z-index:25; width:48px; height:48px; display:grid; place-items:center; border:1px solid #d6dad4; border-radius:14px; background:rgba(255,255,255,.94); box-shadow:0 18px 46px rgba(31,43,36,.16); backdrop-filter:blur(12px); transform:translateX(-50%); cursor:pointer; transition:transform .18s ease,box-shadow .18s ease; }
 .timeline-float-button:hover { transform:translateX(-50%) translateY(-1px); box-shadow:0 22px 52px rgba(31,43,36,.18); }
-.timeline-panel { position:absolute; left:50%; bottom:18px; z-index:25; width:calc(100% - 48px); min-height:116px; display:grid; grid-template-columns:40px minmax(0,1fr) 92px; align-items:center; gap:12px; padding:13px 18px; border:1px solid #d6dad4; border-radius:14px; background:rgba(255,255,255,.94); box-shadow:0 24px 60px rgba(31,43,36,.18); backdrop-filter:blur(12px); transform:translateX(-50%); animation:timeline-pop .22s ease both; }
-@keyframes timeline-pop { from { opacity:0; transform:translateX(-50%) translateY(12px) scale(.985); } to { opacity:1; transform:translateX(-50%) translateY(0) scale(1); } }
-.timeline-collapse-button { width:36px; height:36px; border:0; border-radius:8px; background:var(--lime); color:var(--ink); cursor:pointer; transform:rotate(90deg); }
-.timeline-collapse-button:hover { filter:brightness(.98); }
-.timeline-items { min-width:0; display:flex; gap:8px; overflow-x:auto; padding:3px; }
+.timeline-panel { position:absolute; left:calc(var(--left-panel-width,264px) + 18px); right:calc(var(--right-panel-width,304px) + 18px); bottom:18px; z-index:25; min-height:126px; display:grid; grid-template-rows:18px minmax(0,1fr); gap:8px; padding:9px 14px 13px; border:1px solid #d6dad4; border-radius:14px; background:rgba(255,255,255,.94); box-shadow:0 24px 60px rgba(31,43,36,.18); backdrop-filter:blur(12px); animation:timeline-pop .22s ease both; }
+@keyframes timeline-pop { from { opacity:0; transform:translateY(12px) scale(.985); } to { opacity:1; transform:translateY(0) scale(1); } }
+.timeline-collapse-button { justify-self:center; width:74px; height:18px; display:grid; place-items:center; border:0; border-radius:999px; background:#e7ebdf; color:#657068; cursor:pointer; line-height:1; }
+.timeline-collapse-button:hover { background:#dde4d2; }
+.timeline-collapse-button .icon { transform:rotate(90deg); }
+.timeline-body { min-width:0; display:grid; grid-template-columns:minmax(0,1fr) 92px; align-items:center; gap:12px; }
+.timeline-items { min-width:0; display:flex; gap:8px; overflow-x:auto; overflow-y:hidden; padding:3px; cursor:grab; scrollbar-width:none; touch-action:pan-y; }
+.timeline-items::-webkit-scrollbar { display:none; }
+.timeline-items:active { cursor:grabbing; }
 .timeline-card { position:relative; min-width:210px; height:70px; display:grid; grid-template-columns:34px 1fr; align-items:center; gap:9px; padding:0 11px; border:1px solid #dde1db; border-radius:8px; background:#fff; text-align:left; cursor:pointer; overflow:hidden; }
 .timeline-card::after { content:""; position:absolute; left:0; right:0; bottom:0; height:3px; background:transparent; }
 .timeline-card.active { border-color:#7d8e82; box-shadow:0 4px 13px rgba(31,43,36,.07); } .timeline-card.active::after { background:var(--orange); }
@@ -171,11 +175,12 @@ select:focus,input:focus { border-color:#9eaaa1; box-shadow:0 0 0 2px rgba(90,10
 
 /* 小屏幕逐步收窄侧栏；更窄时隐藏属性面板和次要工具栏信息。 */
 @media (max-width:1100px) {
+  .studio-shell { --left-panel-width:224px; --right-panel-width:260px; }
   .left-panel { --panel-width:224px; } .right-panel { --panel-width:260px; }
   .brand { width:180px; } .button.subtle { display:none; }
 }
 @media (max-width:820px) {
-  .studio-shell { --topbar-height:58px; }
+  .studio-shell { --topbar-height:58px; --left-panel-width:190px; --right-panel-width:0px; }
   .left-panel { --panel-width:190px; } .right-panel { display:none; } .topbar { padding:0 10px; } .project-title { display:none; } .top-actions { margin-left:auto; }
-  .timeline-panel { grid-template-columns:40px minmax(0,1fr); width:calc(100% - 28px); } .timeline-summary { display:none; }
+  .timeline-panel { left:14px; right:14px; } .timeline-body { grid-template-columns:minmax(0,1fr); } .timeline-summary { display:none; }
 }
