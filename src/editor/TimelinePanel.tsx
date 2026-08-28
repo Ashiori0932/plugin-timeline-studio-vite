@@ -19,6 +19,7 @@ type TimelineDrag = {
   pointerId: number;
   startX: number;
   scrollLeft: number;
+  selectIndex?: number;
 };
 
 /**
@@ -46,11 +47,14 @@ export function TimelinePanel({ project, activeIndex, onSelect, onPanelFocus }: 
   function startTimelineDrag(event: ReactPointerEvent<HTMLDivElement>) {
     if (event.button !== 0) return;
     handlePointerDown(event);
+    const target = event.target as HTMLElement;
+    const card = target.closest<HTMLElement>("[data-timeline-index]");
     didDragRef.current = false;
     dragRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
       scrollLeft: event.currentTarget.scrollLeft,
+      selectIndex: card ? Number(card.dataset.timelineIndex) : undefined,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
   }
@@ -67,15 +71,13 @@ export function TimelinePanel({ project, activeIndex, onSelect, onPanelFocus }: 
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
     dragRef.current = null;
-    event.currentTarget.releasePointerCapture(event.pointerId);
-  }
-
-  function selectTimelineItem(index: number) {
-    if (didDragRef.current) {
-      didDragRef.current = false;
-      return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    onSelect(index);
+    if (!didDragRef.current && drag.selectIndex !== undefined) {
+      onSelect(drag.selectIndex);
+    }
+    didDragRef.current = false;
   }
 
   if (!isExpanded) {
@@ -104,7 +106,7 @@ export function TimelinePanel({ project, activeIndex, onSelect, onPanelFocus }: 
           {project.items.map((item, index) => {
             const duration = item.duration ?? project.timeline.defaultDuration;
             return (
-              <button className={`timeline-card ${activeIndex === index ? "active" : ""}`} key={item.id ?? index} onClick={() => selectTimelineItem(index)}>
+              <button className={`timeline-card ${activeIndex === index ? "active" : ""}`} key={item.id ?? index} type="button" data-timeline-index={index}>
                 <span className="timeline-number">{String(index + 1).padStart(2, "0")}</span>
                 <span><strong>{String(item.title ?? item.id ?? `对象 ${index + 1}`)}</strong><small>{formatTime(duration)} · {Object.keys(item).length} 个字段</small></span>
               </button>
