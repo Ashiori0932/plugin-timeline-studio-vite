@@ -8,6 +8,7 @@ import type {
 import { chartPlugin } from "./builtin/chart";
 import { imagePlugin } from "./builtin/image";
 import { progressPlugin } from "./builtin/progress";
+import { radarPlugin } from "./builtin/radar";
 import { textPlugin } from "./builtin/text";
 
 /**
@@ -18,6 +19,7 @@ export const PLUGIN_REGISTRY: Record<string, PluginDefinition> = {
   [textPlugin.type]: textPlugin,
   [imagePlugin.type]: imagePlugin,
   [chartPlugin.type]: chartPlugin,
+  [radarPlugin.type]: radarPlugin,
   [progressPlugin.type]: progressPlugin,
 };
 

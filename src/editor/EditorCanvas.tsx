@@ -95,6 +95,18 @@ export function EditorCanvas({ project, activeItem, selectedId, toast, isZoomFoc
           height = Math.max(minimumSize.height, drag.origin.height + drag.origin.y - nextY);
           y = drag.origin.y + drag.origin.height - height;
         }
+        const aspectRatio = PLUGIN_REGISTRY[component.pluginType]?.aspectRatio;
+        if (aspectRatio && Number.isFinite(aspectRatio) && aspectRatio > 0) {
+          // 锁定宽高比的组件以较大的拖拽维度为准；西/北手柄保持对侧边缘固定。
+          const requestedWidth = Math.max(width, height * aspectRatio);
+          const requestedHeight = requestedWidth / aspectRatio;
+          const maxWidth = drag.handle?.includes("w") ? drag.origin.x + drag.origin.width : project.canvas.width - x;
+          const maxHeight = drag.handle?.includes("n") ? drag.origin.y + drag.origin.height : project.canvas.height - y;
+          width = Math.min(requestedWidth, maxWidth, maxHeight * aspectRatio);
+          height = width / aspectRatio;
+          if (drag.handle?.includes("w")) x = drag.origin.x + drag.origin.width - width;
+          if (drag.handle?.includes("n")) y = drag.origin.y + drag.origin.height - height;
+        }
         // 最后裁剪右侧和底部，确保缩放后的组件仍完全位于画布内。
         width = Math.min(width, project.canvas.width - x);
         height = Math.min(height, project.canvas.height - y);

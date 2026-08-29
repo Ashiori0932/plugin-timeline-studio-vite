@@ -106,6 +106,8 @@ export type PluginDefinition = {
   defaultSize: { width: number; height: number };
   /** 可选的实例最小尺寸；未设置时使用编辑器统一限制。 */
   minimumSize?: { width: number; height: number };
+  /** 可选的宽高比锁定；例如 1 表示调整尺寸时保持正方形。 */
+  aspectRatio?: number;
   defaultProperties: Record<string, unknown>;
   propertySchema: PluginProperty[];
   render: (context: PluginRenderContext) => ReactNode;

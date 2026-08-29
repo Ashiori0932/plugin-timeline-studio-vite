@@ -184,3 +184,13 @@ select:focus,input:focus { border-color:#9eaaa1; box-shadow:0 0 0 2px rgba(90,10
   .left-panel { --panel-width:190px; } .right-panel { display:none; } .topbar { padding:0 10px; } .project-title { display:none; } .top-actions { margin-left:auto; }
   .timeline-panel { left:14px; right:14px; } .timeline-body { grid-template-columns:minmax(0,1fr); } .timeline-summary { display:none; }
 }
+
+/* 雷达图组件：SVG 网格、发光填充和外侧双行标签。 */
+.plugin-radar { width:100%; height:100%; display:grid; place-items:center; overflow:hidden; }
+.plugin-radar svg { width:100%; height:100%; display:block; filter:drop-shadow(0 10px 24px rgba(41,68,105,.14)); }
+.radar-grid polygon { fill:none; stroke-width:.5; opacity:.78; }
+.radar-grid line { stroke-width:.42; opacity:.45; }
+.radar-fill { fill-opacity:.28; stroke-width:.9; filter:drop-shadow(0 0 4px currentColor); }
+.radar-label { font-size:4px; font-weight:700; letter-spacing:.02em; paint-order:stroke; stroke:rgba(255,255,255,.52); stroke-width:.7; stroke-linejoin:round; }
+.radar-label-value { font:600 3.4px var(--font-geist-mono); letter-spacing:.04em; }
+.presentation-shell .radar-fill { will-change:points; }

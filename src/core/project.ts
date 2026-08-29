@@ -106,7 +106,7 @@ export function createDefaultProject(): ProjectDocument {
       { id: "eyebrow", pluginType: "builtin.text", binding: "eyebrow", x: 72, y: 88, width: 650, height: 48, zIndex: 2, properties: { fontSize: 18, color: "#607165", weight: "700", align: "left", letterSpacing: 3 } },
       { id: "hero-title", pluginType: "builtin.text", binding: "title", x: 72, y: 176, width: 680, height: 230, zIndex: 3, properties: { fontSize: 72, color: "#17211d", weight: "700", align: "left", letterSpacing: -3 } },
       { id: "description", pluginType: "builtin.text", binding: "description", x: 76, y: 438, width: 630, height: 112, zIndex: 4, properties: { fontSize: 22, color: "#58615c", weight: "400", align: "left", letterSpacing: 0 } },
-      { id: "metrics", pluginType: "builtin.chart", binding: "metrics", x: 72, y: 626, width: 680, height: 190, zIndex: 5, properties: { accent: "#ee6b4d", labelColor: "#33413a", barColor: "#d9ded5", maxItems: 4 } },
+      { id: "metrics", pluginType: "builtin.radar", binding: "metrics", x: 172, y: 500, width: 360, height: 360, zIndex: 5, properties: { dimensions: 4, minValue: 0, maxValue: 100, accent: "#7d96ff", fillColor: "#8aa2ff", gridColor: "#8d9aa0", labelColor: "#17211d", showValues: "on", animationDuration: 700 } },
     ],
   };
 }
