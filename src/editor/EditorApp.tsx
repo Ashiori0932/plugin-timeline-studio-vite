@@ -107,6 +107,26 @@ export function EditorApp({ project, setProject, onPresent }: Props) {
     setToast(`已添加${plugin.name}`);
   }
 
+
+  function reorderLayer(draggedId: string, targetId: string) {
+    setProject((current) => {
+      const ordered = current.components.slice().sort((a, b) => b.zIndex - a.zIndex);
+      const from = ordered.findIndex((component) => component.id === draggedId);
+      const to = ordered.findIndex((component) => component.id === targetId);
+      if (from < 0 || to < 0 || from === to) return current;
+      const [dragged] = ordered.splice(from, 1);
+      ordered.splice(to, 0, dragged);
+      const nextZById = new Map(ordered.map((component, index) => [component.id, ordered.length - index]));
+      return {
+        ...current,
+        components: current.components.map((component) => ({
+          ...component,
+          zIndex: nextZById.get(component.id) ?? component.zIndex,
+        })),
+      };
+    });
+  }
+
   function duplicateSelected() {
     if (!selected) return;
     const copy: ComponentInstance = {
@@ -181,6 +201,7 @@ export function EditorApp({ project, setProject, onPresent }: Props) {
         onPanelFocus={() => setIsCanvasZoomFocused(false)}
         onSelect={setSelectedId}
         onAdd={addComponent}
+        onReorderLayer={reorderLayer}
       />
       <EditorCanvas
         project={project}

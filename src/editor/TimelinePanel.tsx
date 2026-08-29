@@ -41,6 +41,8 @@ export function TimelinePanel({ project, activeIndex, onSelect, onPanelFocus }: 
 
   function handleItemsWheel(event: ReactWheelEvent<HTMLDivElement>) {
     event.preventDefault();
+    event.stopPropagation();
+    onPanelFocus();
     event.currentTarget.scrollLeft += event.deltaX || event.deltaY;
   }
 
